@@ -9,6 +9,9 @@
 | 不会游泳的徐胖子 · 微博 | 徐胖子 / 微博 | 23 | `weibo-xu.html` |
 | 我如何管理自己的投资 | 阿兰同学 / 雪球 | 5 | `xueqiu-investment.html` |
 | 明日的世界 | 阿兰同学 / 雪球 | 7 | `xueqiu-tomorrow.html` |
+| 人民币资产长牛的起点 | 阿兰同学 / 雪球 | 4 | `xueqiu-rmb.html` |
+| 全球变暖下的长线投资 | 阿兰同学 / 雪球 | 2 | `xueqiu-climate.html` |
+| 中国石油与油气研究合集 | 阿兰同学 / 雪球 | 30 | `xueqiu-petrochina.html` |
 
 首页 `index.html` 是一张漂浮星图。点一颗星打开对应归档；在归档内点「← MarketPearls」返回。
 
