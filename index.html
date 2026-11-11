@@ -144,13 +144,13 @@ orbit.innerHTML=COLLECTIONS.map(function(c,i){
  '<span class="olabel"><span class="ot">'+c.title+'</span><span class="os">'+c.sub+'</span></span></a>';
 }).join('');
 
-/* 访问统计（隐私友好 · GoatCounter）
+/* 访问统计（隐私友好 · GoatCounter + Cloudflare Worker 代理）
    - 仅聚合统计，不采集/展示个人 IP、省份等可识别信息（符合 PIPL / GDPR）。
-   - 配置 SITE + 只读 TOKEN 后：尝试在页内实时展示总访问量 + 国家级分布；
-     若浏览器因跨域(CORS)拦截，则优雅降级为指向 GoatCounter 公开看板的链接。
-   - 注册免费：https://www.goatcounter.com （Settings → Sites → API 取只读 token）。 */
+   - GoatCounter 只读 token 只存在 Worker 的 Secret 里，前端不含任何密钥。
+   - 页内实时展示总访问量 + 国家级分布；异常时优雅降级为看板链接。
+   - GoatCounter 免费注册：https://www.goatcounter.com */
 (function(){
-  var GC={SITE:'YOUR-SITECODE',TOKEN:'YOUR-READONLY-TOKEN',LIMIT:8,PROXY:''}; // PROXY 填 Cloudflare Worker 地址即可在页内显示实时数字，例如 'https://gc-proxy.xxx.workers.dev'
+  var GC={SITE:'YOUR-SITECODE',LIMIT:8,PROXY:'https://goatcounter-cors-proxy.johnwish1590.workers.dev'};
   var totalEl=document.getElementById('statsTotal'),barsEl=document.getElementById('statsBars'),
       noteEl=document.getElementById('statsNote');
   noteEl.innerHTML='隐私友好 · 仅聚合统计，不含个人 IP / 省份';
@@ -159,14 +159,10 @@ orbit.innerHTML=COLLECTIONS.map(function(c,i){
   // 加载无 Cookie 的隐私统计追踪脚本
   (function(){var s=document.createElement('script');s.async=true;s.src='https://gc.zgo.at/count.js';
     s.setAttribute('data-goatcounter',GC.SITE);document.head.appendChild(s);})();
-  var base='https://'+GC.SITE+'.goatcounter.com/api/v0/',auth='Basic '+btoa(GC.TOKEN+':');
   function get(p){
-    if(GC.PROXY){ // 走 Cloudflare Worker 代理：服务端持有 token，浏览器只传站点代码
-      var q=p.indexOf('?'),ep=q<0?p:p.slice(0,q),qs=q<0?'':p.slice(q+1);
-      var u=GC.PROXY+'?site='+encodeURIComponent(GC.SITE)+'&path='+encodeURIComponent(ep)+(qs?'&'+qs:'');
-      return fetch(u,{headers:{'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
-    }
-    return fetch(base+p,{headers:{Authorization:auth,'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+    var q=p.indexOf('?'),ep=q<0?p:p.slice(0,q),qs=q<0?'':p.slice(q+1);
+    var u=GC.PROXY+'?site='+encodeURIComponent(GC.SITE)+'&path='+encodeURIComponent(ep)+(qs?'&'+qs:'');
+    return fetch(u,{headers:{'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
   }
   var start='2000-01-01',end=new Date().toISOString().slice(0,10);
   Promise.all([get('stats/total?start='+start+'&end='+end),get('stats/locations?start='+start+'&end='+end+'&limit='+GC.LIMIT)])
