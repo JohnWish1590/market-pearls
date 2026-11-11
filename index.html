@@ -69,6 +69,23 @@ animation:float 6.5s ease-in-out infinite;transition:box-shadow .3s,transform .3
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
 @keyframes rise{to{opacity:1;transform:none;}}
 @media(prefers-reduced-motion:reduce){.orb{animation:none;}.orb-item{animation:none;opacity:1;transform:none;}.title-rule{animation:none;width:120px;}}
+
+.stats{margin:clamp(34px,5vw,52px) auto 0;width:100%;max-width:520px;text-align:left;
+border:1px solid var(--rule);border-radius:14px;padding:18px 22px;background:color-mix(in srgb,var(--paper) 72%,var(--rule2));}
+.stats-kicker{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--mirror);}
+.stats-top{display:flex;align-items:baseline;justify-content:space-between;gap:14px;}
+.stats-total{font-family:"Songti SC","Noto Serif SC","SimSun",serif;font-size:30px;font-weight:700;color:var(--accent);line-height:1;font-variant-numeric:tabular-nums;}
+.stats-total small{font-size:11px;color:var(--muted);font-weight:400;letter-spacing:.04em;margin-left:7px;font-family:-apple-system,sans-serif;}
+.stats-bars{margin-top:15px;display:flex;flex-direction:column;gap:9px;}
+.stats-row{display:grid;grid-template-columns:96px 1fr auto;align-items:center;gap:10px;font-size:12px;}
+.stats-name{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.stats-track{height:7px;background:var(--rule);border-radius:4px;overflow:hidden;}
+.stats-fill{display:block;height:100%;background:var(--accent);border-radius:4px;opacity:.78;}
+.stats-cnt{color:var(--ink);font-variant-numeric:tabular-nums;min-width:2.5em;text-align:right;}
+.stats-hint{font-size:12px;color:var(--mirror);line-height:1.7;}
+.stats-note{margin-top:13px;font-size:10.5px;color:var(--mirror);line-height:1.65;border-top:1px solid var(--rule);padding-top:10px;}
+.stats-link{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 40%,transparent);}
+.stats-link:hover{opacity:.8;}
 </style>
 </head>
 <body>
@@ -88,11 +105,20 @@ animation:float 6.5s ease-in-out infinite;transition:box-shadow .3s,transform .3
     <div class="orbit" id="orbit"></div>
   </div>
   <div class="foot">新增收藏：把一份离线归档 HTML 放进本目录，并在 COLLECTIONS 数组里加一条，就会亮起一颗新星。</div>
+
+  <div class="stats" id="stats">
+    <div class="stats-top">
+      <span class="stats-kicker">访问统计</span>
+      <span class="stats-total" id="statsTotal">—</span>
+    </div>
+    <div class="stats-bars" id="statsBars"><span class="stats-hint">访问统计未配置</span></div>
+    <div class="stats-note" id="statsNote"></div>
+  </div>
 </div>
 <script>
 var COLLECTIONS=[
 {file:'weibo-xu.html',glyph:'徐胖',color:'#8a2b2b',title:'不会游泳的徐胖子',sub:'微博 · 23 篇'},
-{file:'xueqiu-investment.html',glyph:'投资',color:'#2f5d57',title:'我如何管理自己的投资',sub:'阿兰同学 · 雪球 · 5 篇'},
+{file:'xueqiu-investment.html',glyph:'投资',color:'#2f5d57',title:'我如何管理自己的投资',sub:'阿兰同学 · 雪球 · 6 篇'},
 {file:'xueqiu-tomorrow.html',glyph:'明日',color:'#9a6b3f',title:'明日的世界',sub:'阿兰同学 · 雪球 · 7 篇'},
 {file:'xueqiu-rmb.html',glyph:'RMB',color:'#b8862f',title:'人民币资产长牛的起点',sub:'阿兰同学 · 雪球 · 4 篇'},
 {file:'xueqiu-climate.html',glyph:'气候',color:'#2f6f8f',title:'全球变暖下的长线投资',sub:'阿兰同学 · 雪球 · 2 篇'},
@@ -117,6 +143,44 @@ orbit.innerHTML=COLLECTIONS.map(function(c,i){
  '<span class="orb"><span class="g">'+c.glyph+'</span></span>'+
  '<span class="olabel"><span class="ot">'+c.title+'</span><span class="os">'+c.sub+'</span></span></a>';
 }).join('');
+
+/* 访问统计（隐私友好 · GoatCounter）
+   - 仅聚合统计，不采集/展示个人 IP、省份等可识别信息（符合 PIPL / GDPR）。
+   - 配置 SITE + 只读 TOKEN 后：尝试在页内实时展示总访问量 + 国家级分布；
+     若浏览器因跨域(CORS)拦截，则优雅降级为指向 GoatCounter 公开看板的链接。
+   - 注册免费：https://www.goatcounter.com （Settings → Sites → API 取只读 token）。 */
+(function(){
+  var GC={SITE:'YOUR-SITECODE',TOKEN:'YOUR-READONLY-TOKEN',LIMIT:8};
+  var totalEl=document.getElementById('statsTotal'),barsEl=document.getElementById('statsBars'),
+      noteEl=document.getElementById('statsNote');
+  noteEl.innerHTML='隐私友好 · 仅聚合统计，不含个人 IP / 省份';
+  function hint(t){totalEl.textContent='—';barsEl.innerHTML='<span class="stats-hint">'+t+'</span>';}
+  if(!GC.SITE||GC.SITE.indexOf('YOUR-')===0){hint('访问统计未配置（填入 GoatCounter 站点代码后启用）');return;}
+  // 加载无 Cookie 的隐私统计追踪脚本
+  (function(){var s=document.createElement('script');s.async=true;s.src='https://gc.zgo.at/count.js';
+    s.setAttribute('data-goatcounter',GC.SITE);document.head.appendChild(s);})();
+  var base='https://'+GC.SITE+'.goatcounter.com/api/v0/',auth='Basic '+btoa(GC.TOKEN+':');
+  function get(p){return fetch(base+p,{headers:{Authorization:auth,'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});}
+  var start='2000-01-01',end=new Date().toISOString().slice(0,10);
+  Promise.all([get('stats/total?start='+start+'&end='+end),get('stats/locations?start='+start+'&end='+end+'&limit='+GC.LIMIT)])
+    .then(function(r){
+      var total=(r[0]&&(r[0].total||r[0].count))||0;
+      totalEl.innerHTML=total.toLocaleString()+'<small>次访问</small>';
+      var locs=((r[1]&&r[1].stats)||r[1]||[]).filter(function(l){return l&&l.name&&l.name!=='unknown';});
+      if(!locs.length){barsEl.innerHTML='<span class="stats-hint">暂无足够数据</span>';return;}
+      var max=locs[0].count||1;
+      barsEl.innerHTML=locs.map(function(l){
+        var pct=Math.max(6,Math.round(l.count/max*100));
+        return '<div class="stats-row"><span class="stats-name" title="'+l.name+'">'+l.name+'</span>'+
+        '<span class="stats-track"><span class="stats-fill" style="width:'+pct+'%"></span></span>'+
+        '<span class="stats-cnt">'+l.count.toLocaleString()+'</span></div>';
+      }).join('');
+    })
+    .catch(function(){ // CORS / 鉴权被拦截：降级为指向公开看板
+      totalEl.textContent='✓';
+      barsEl.innerHTML='<span class="stats-hint">隐私访问统计已启用 · <a class="stats-link" href="https://'+GC.SITE+'.goatcounter.com" target="_blank" rel="noopener">在 GoatCounter 查看完整数据 →</a></span>';
+    });
+})();
 </script>
 </body>
 </html>
