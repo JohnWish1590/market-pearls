@@ -150,7 +150,7 @@ orbit.innerHTML=COLLECTIONS.map(function(c,i){
      若浏览器因跨域(CORS)拦截，则优雅降级为指向 GoatCounter 公开看板的链接。
    - 注册免费：https://www.goatcounter.com （Settings → Sites → API 取只读 token）。 */
 (function(){
-  var GC={SITE:'YOUR-SITECODE',TOKEN:'YOUR-READONLY-TOKEN',LIMIT:8};
+  var GC={SITE:'YOUR-SITECODE',TOKEN:'YOUR-READONLY-TOKEN',LIMIT:8,PROXY:''}; // PROXY 填 Cloudflare Worker 地址即可在页内显示实时数字，例如 'https://gc-proxy.xxx.workers.dev'
   var totalEl=document.getElementById('statsTotal'),barsEl=document.getElementById('statsBars'),
       noteEl=document.getElementById('statsNote');
   noteEl.innerHTML='隐私友好 · 仅聚合统计，不含个人 IP / 省份';
@@ -160,7 +160,14 @@ orbit.innerHTML=COLLECTIONS.map(function(c,i){
   (function(){var s=document.createElement('script');s.async=true;s.src='https://gc.zgo.at/count.js';
     s.setAttribute('data-goatcounter',GC.SITE);document.head.appendChild(s);})();
   var base='https://'+GC.SITE+'.goatcounter.com/api/v0/',auth='Basic '+btoa(GC.TOKEN+':');
-  function get(p){return fetch(base+p,{headers:{Authorization:auth,'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});}
+  function get(p){
+    if(GC.PROXY){ // 走 Cloudflare Worker 代理：服务端持有 token，浏览器只传站点代码
+      var q=p.indexOf('?'),ep=q<0?p:p.slice(0,q),qs=q<0?'':p.slice(q+1);
+      var u=GC.PROXY+'?site='+encodeURIComponent(GC.SITE)+'&path='+encodeURIComponent(ep)+(qs?'&'+qs:'');
+      return fetch(u,{headers:{'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+    }
+    return fetch(base+p,{headers:{Authorization:auth,'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+  }
   var start='2000-01-01',end=new Date().toISOString().slice(0,10);
   Promise.all([get('stats/total?start='+start+'&end='+end),get('stats/locations?start='+start+'&end='+end+'&limit='+GC.LIMIT)])
     .then(function(r){
