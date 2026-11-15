@@ -165,10 +165,14 @@ orbit.innerHTML=COLLECTIONS.map(function(c,i){
     var u=GC.PROXY+'?site='+encodeURIComponent(GC.SITE)+'&path='+encodeURIComponent(ep)+(qs?'&'+qs:'');
     return fetch(u,{headers:{'Accept':'application/json'}}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
   }
-  var start='2000-01-01',end=new Date().toISOString().slice(0,10);
+  var start='2000-01-01',_n=new Date(),
+      end=new Date(_n.getTime()-_n.getTimezoneOffset()*60000).toISOString().slice(0,10);
   Promise.all([get('stats/total?start='+start+'&end='+end),get('stats/locations?start='+start+'&end='+end+'&limit='+GC.LIMIT)])
     .then(function(r){
-      var total=(r[0]&&(r[0].total||r[0].count))||0;
+      // GoatCounter 会按站点时区与 UTC 各报一份页数，边界日可能一份为 0。
+      // 取两者较大值；若上游仍返回逐日数组，则兜底求和。
+      var t=r[0]||{},total=Math.max(t.total||0,t.total_utc||0,t.total_events||0,t.count||0);
+      if(!total&&Array.isArray(t.stats))total=t.stats.reduce(function(s,d){return s+(d.count||d.total||0);},0);
       totalEl.innerHTML=total.toLocaleString()+'<small>次访问</small>';
       var locs=((r[1]&&r[1].stats)||r[1]||[]).filter(function(l){return l&&l.name&&l.name!=='unknown';});
       if(!locs.length){barsEl.innerHTML='<span class="stats-hint">暂无足够数据</span>';return;}
