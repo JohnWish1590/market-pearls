@@ -151,7 +151,7 @@ orbit.innerHTML=COLLECTIONS.map(function(c,i){
    - 页内实时展示总访问量 + 国家级分布；异常时优雅降级为看板链接。
    - GoatCounter 免费注册：https://www.goatcounter.com */
 (function(){
-  var GC={SITE:'YOUR-SITECODE',LIMIT:8,PROXY:'https://goatcounter-cors-proxy.johnwish1590.workers.dev'};
+  var GC={SITE:'hicheung',LIMIT:8,PROXY:'https://goatcounter-cors-proxy.johnwish1590.workers.dev'};
   var totalEl=document.getElementById('statsTotal'),barsEl=document.getElementById('statsBars'),
       noteEl=document.getElementById('statsNote');
   noteEl.innerHTML='隐私友好 · 仅聚合统计，不含个人 IP / 省份';
@@ -159,7 +159,7 @@ orbit.innerHTML=COLLECTIONS.map(function(c,i){
   if(!GC.SITE||GC.SITE.indexOf('YOUR-')===0){hint('访问统计未配置（填入 GoatCounter 站点代码后启用）');return;}
   // 加载无 Cookie 的隐私统计追踪脚本
   (function(){var s=document.createElement('script');s.async=true;s.src='https://gc.zgo.at/count.js';
-    s.setAttribute('data-goatcounter',GC.SITE);document.head.appendChild(s);})();
+    s.setAttribute('data-goatcounter','https://'+GC.SITE+'.goatcounter.com/count');document.head.appendChild(s);})();
   function get(p){
     var q=p.indexOf('?'),ep=q<0?p:p.slice(0,q),qs=q<0?'':p.slice(q+1);
     var u=GC.PROXY+'?site='+encodeURIComponent(GC.SITE)+'&path='+encodeURIComponent(ep)+(qs?'&'+qs:'');
